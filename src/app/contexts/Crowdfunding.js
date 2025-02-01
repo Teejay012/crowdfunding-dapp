@@ -47,8 +47,14 @@ const CrowdfundingProvider = ({ children }) => {
         parsedDeadline
       );
   
-      await transaction.wait();
-      console.log("Transaction successful:", transaction);
+      // await transaction.wait();
+      // console.log("Transaction successful:", transaction);
+
+      const receipt = await transaction.wait();
+      console.log("Transaction receipt:", receipt);
+
+      // Return transaction hash or any relevant data
+      return receipt;
     } catch (error) {
       console.error("Transaction failed:", error);
     }
@@ -85,28 +91,36 @@ const CrowdfundingProvider = ({ children }) => {
   // Get campaigns created by the current user
   const getUserCampaigns = async () => {
     try {
-      const provider = new ethers.providers.JsonRpcProvider();
-      const contract = fetchContract(provider);
+        const provider = new ethers.providers.JsonRpcProvider();
+        const contract = fetchContract(provider);
 
-      const allCampaigns = await contract.getAllCampaigns();
-      const accounts = await window.ethereum.request({ method: "eth_accounts" });
-      const currentUser = accounts[0];
+        const allCampaigns = await contract.getAllCampaigns();
+        console.log("All campaigns:", allCampaigns);
 
-      const filteredCampaigns = allCampaigns.filter((campaign) => campaign.owner === currentUser);
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
 
-      const userData = filteredCampaigns.map((campaign, i) => ({
-        owner: campaign.owner,
-        title: campaign.title,
-        description: campaign.description,
-        target: ethers.utils.formatEther(campaign.target.toString()),
-        deadline: campaign.deadline.toNumber(),
-        amountCollected: ethers.utils.formatEther(campaign.amountCollected.toString()),
-        pId: i,
-      }));
+        if (!accounts || accounts.length === 0) {
+            console.error("No accounts found. Please connect your wallet.");
+            return [];
+        }
+        
+        const currentUser = accounts[0].toLowerCase();
 
-      return userData;
+        const filteredCampaigns = allCampaigns.filter((campaign) => campaign.owner.toLowerCase() === currentUser);
+
+        const userData = filteredCampaigns.map((campaign, i) => ({
+            owner: campaign.owner,
+            title: campaign.title,
+            description: campaign.description,
+            target: ethers.utils.formatEther(campaign.target.toString()),
+            deadline: campaign.deadline.toNumber(),
+            amountCollected: ethers.utils.formatEther(campaign.amountCollected.toString()),
+            pId: i,
+        }));
+
+        return userData;
     } catch (error) {
-      console.error("Error fetching user campaigns:", error);
+        console.error("Error fetching user campaigns:", error);
     }
   };
 
@@ -138,24 +152,29 @@ const CrowdfundingProvider = ({ children }) => {
     try {
       const provider = new ethers.providers.JsonRpcProvider();
       const contract = fetchContract(provider);
-
+  
       const donations = await contract.getCampaignDonators(pId);
+      
+      if (!donations || donations[0].length !== donations[1].length) {
+        throw new Error("Mismatch in the number of donators and donations.");
+      }
+  
       const numberOfDonations = donations[0].length;
-
       const parsedDonations = [];
-
+  
       for (let i = 0; i < numberOfDonations; i++) {
         parsedDonations.push({
-          donators: donations[0][i],
-          donations: ethers.utils.formatEther(donations[1][i].toString()), // Format donation amount
+          donator: donations[0][i],  // Single donator address
+          donation: ethers.utils.formatEther(donations[1][i].toString()), // Format donation amount
         });
       }
-
+  
       return parsedDonations;
     } catch (error) {
       console.error("Error fetching donations:", error);
     }
   };
+  
 
 
 
@@ -202,6 +221,28 @@ const CrowdfundingProvider = ({ children }) => {
   };
   
   getChainId();
+
+  const listenToEvents = () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = fetchContract(provider);
+  
+    contract.on("CampaignCreated", (id, title, target, deadline) => {
+      console.log("New campaign created:", { id, title, target, deadline });
+    });
+  };
+
+  const fetchPastCampaigns = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = fetchContract(provider);
+  
+    const events = await contract.queryFilter("CampaignCreated"); // Fetch all logs
+    console.log("Past Campaigns Created:", events);
+  };
+  
+  useEffect(() => {
+    listenToEvents();
+    fetchPastCampaigns()
+  }, []);
 
 
   return (

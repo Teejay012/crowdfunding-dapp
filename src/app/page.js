@@ -14,25 +14,27 @@ const Home = () => {
     getDonations,
   } = useContext(CrowdfundingContext);
 
-  const [allCampaign, setAllCampaign] = useState();
-  const [userCampaign, setUserCampaign] = useState();
+  const [allCampaign, setAllCampaign] = useState([]);
+  const [userCampaign, setUserCampaign] = useState([]);
 
   useEffect(() => {
-
-    const getCampaignsData = getCampaigns();
-    const getUserCampaignsData = getUserCampaigns();
-    return async () => {
-        const allData = await getCampaignsData;
-        const userData = await getUserCampaignsData;
+    const fetchData = async () => {
+      try {
+        const allData = await getCampaigns();
+        const userData = await getUserCampaigns();
 
         setAllCampaign(allData);
         setUserCampaign(userData);
 
-        console.log("All campaigns:", allCampaign);
-        console.log("User campaigns:", userCampaign);
+        console.log("All campaigns:", allData);
+        console.log("User campaigns:", userData);
+      } catch (error) {
+        console.error("Error fetching campaigns:", error);
+      }
     };
 
-  }, []);
+    fetchData(); // Call the async function inside useEffect
+  }, []); // Run only once on mount
 
   // Donation Popup State
   const [openModel, setOpenModel] = useState(false);
@@ -51,11 +53,10 @@ const Home = () => {
 
       <Card
         title="Your Created Campaign"
-        allCampaigns={userCampaign}
+        allCampaign={userCampaign}
         setOpenModel={setOpenModel}
         setDonate={setDonateCampaign}
       />
-          
 
       {openModel && (
         <PopUp
@@ -65,7 +66,6 @@ const Home = () => {
           donateFunction={donateToCampaign}
         />
       )}
-
     </div>
   );
 };

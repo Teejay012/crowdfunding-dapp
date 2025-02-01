@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 import { CrowdfundingContext } from "../contexts/Crowdfunding"
 
-const Hero = ({ titleData, createCampaign }) => {
+const Hero = ({ getCampaigns, createCampaign }) => {
 
   const [campaign, setCampaign] = useState({
     title: "",
@@ -14,12 +14,32 @@ const Hero = ({ titleData, createCampaign }) => {
   });
 
 
+  // const createNewCampaign = async (e) => {
+  //   e.preventDefault();
+  //   console.log("Campaign data:", campaign); // Add this line
+  //   try {
+  //     const data = await createCampaign(campaign);
+  //     console.log("Created campaign:", data);
+
+  //     const campaigns = await getCampaigns();
+  //   } catch (error) {
+  //     console.error("Error creating campaign:", error);
+  //   }
+  // };
+
   const createNewCampaign = async (e) => {
-    e.preventDefault();
-    console.log("Campaign data:", campaign); // Add this line
+    if (e && e.preventDefault) e.preventDefault();
+  
+    console.log("Campaign data before submission:", campaign);
+  
     try {
-      const data = await createCampaign(campaign);
-      console.log("Created campaign:", data);
+      const receipt = await createCampaign(campaign);
+      console.log("Created campaign successfully:", receipt);
+      if (receipt && receipt.transactionHash) {
+        console.log("Transaction Hash:", receipt.transactionHash);
+      } else {
+        console.warn("No transaction hash found in receipt.");
+      }
     } catch (error) {
       console.error("Error creating campaign:", error);
     }
