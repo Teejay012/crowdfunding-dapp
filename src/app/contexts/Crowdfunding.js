@@ -65,7 +65,7 @@ const CrowdfundingProvider = ({ children }) => {
   // Get all campaigns
   const getCampaigns = async () => {
     try {
-      const provider = new ethers.providers.JsonRpcProvider();
+      const provider = new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/VQGi3odz5WT4bikDWFyylSrRmBG0Zm1M");
       const contract = fetchContract(provider);
 
       const campaigns = await contract.getAllCampaigns();
@@ -91,7 +91,7 @@ const CrowdfundingProvider = ({ children }) => {
   // Get campaigns created by the current user
   const getUserCampaigns = async () => {
     try {
-        const provider = new ethers.providers.JsonRpcProvider();
+        const provider = new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/VQGi3odz5WT4bikDWFyylSrRmBG0Zm1M");
         const contract = fetchContract(provider);
 
         const allCampaigns = await contract.getAllCampaigns();
@@ -150,7 +150,7 @@ const CrowdfundingProvider = ({ children }) => {
   // Get all donations for a specific campaign
   const getDonations = async (pId) => {
     try {
-      const provider = new ethers.providers.JsonRpcProvider();
+      const provider = new ethers.providers.JsonRpcProvider("https://eth-sepolia.g.alchemy.com/v2/VQGi3odz5WT4bikDWFyylSrRmBG0Zm1M");
       const contract = fetchContract(provider);
   
       const donations = await contract.getCampaignDonators(pId);
